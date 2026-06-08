@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>QL Kỹ Năng SV - STABLE</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#eef2f5;}
+
+.center{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.box{
+background:#fff;
+padding:20px;
+width:300px;
+border-radius:10px;
+box-shadow:0 0 10px #0003;
+}
+
+input{width:100%;padding:8px;margin:5px 0;}
+button{width:100%;padding:10px;background:#1abc9c;border:none;color:#fff;cursor:pointer;}
+
+.header{background:#2c3e50;color:#fff;padding:15px;text-align:center;}
+
+.container{display:flex;}
+
+.menu{
+width:220px;
+background:#34495e;
+height:100vh;
+color:#fff;
+padding:10px;
+}
+
+.menu button{
+width:100%;
+padding:10px;
+background:none;
+border:none;
+color:#fff;
+text-align:left;
+cursor:pointer;
+}
+
+.menu button:hover{background:#1abc9c;}
+
+.content{flex:1;padding:20px;}
+
+.card{
+background:#fff;
+padding:15px;
+border-radius:10px;
+margin-bottom:10px;
+}
+
+.hidden{display:none;}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="center">
+<div class="box">
+<h3>🔐 Đăng nhập</h3>
+
+<input id="u" placeholder="Username">
+<input id="p" type="password" placeholder="Password">
+<button onclick="login()">Đăng nhập</button>
+
+<p id="err" style="color:red"></p>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+<div class="header">🎓 QUẢN LÝ KỸ NĂNG SINH VIÊN</div>
+
+<div class="container">
+
+<!-- MENU -->
+<div class="menu">
+<p id="roleText"></p>
+
+<button onclick="show('home')">🏠 Trang chủ</button>
+<button onclick="show('skill')">📚 Kỹ năng</button>
+<button onclick="show('class')">🏫 Lớp học</button>
+<button onclick="show('reg')">📝 Đăng ký</button>
+<button onclick="show('cancel')">❌ Hủy</button>
+<button onclick="show('list')">📋 DS</button>
+<button onclick="show('grade')">📊 Điểm</button>
+<button onclick="show('cert')">🏅 CN</button>
+
+<button onclick="logout()">🚪 Đăng xuất</button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<div id="home" class="card">
+<h2>Dashboard</h2>
+<p>Hệ thống quản lý kỹ năng sinh viên</p>
+</div>
+
+<div id="skill" class="card hidden">
+<h2>Kỹ năng</h2>
+<input id="sk_ma" placeholder="Mã">
+<input id="sk_ten" placeholder="Tên">
+<button onclick="addSkill()">Thêm</button>
+<div id="sk_list"></div>
+</div>
+
+<div id="class" class="card hidden">
+<h2>Lớp học</h2>
+<input id="cl_ma" placeholder="Mã lớp">
+<input id="cl_limit" placeholder="Sĩ số">
+<button onclick="addClass()">Tạo</button>
+<div id="cl_list"></div>
+</div>
+
+<div id="reg" class="card hidden">
+<h2>Đăng ký</h2>
+<input id="rg_sv" placeholder="MSSV">
+<input id="rg_cl" placeholder="Mã lớp">
+<button onclick="register()">OK</button>
+</div>
+
+<div id="cancel" class="card hidden">
+<h2>Hủy</h2>
+<input id="ca_sv">
+<input id="ca_cl">
+<button onclick="cancelReg()">Hủy</button>
+</div>
+
+<div id="list" class="card hidden">
+<h2>Danh sách</h2>
+<div id="list_out"></div>
+</div>
+
+<div id="grade" class="card hidden">
+<h2>Chấm điểm</h2>
+<input id="gr_sv">
+<input id="gr_cc">
+<input id="gr_test">
+<button onclick="grade()">Lưu</button>
+</div>
+
+<div id="cert" class="card hidden">
+<h2>Chứng nhận</h2>
+<input id="ct_sv">
+<button onclick="showCert()">Xem</button>
+<div id="cert_out"></div>
+</div>
+
+</div>
+</div>
+</div>
+
+<script>
+
+/* ===== SAFE LOGIN ===== */
+function login(){
+
+let u=document.getElementById("u").value;
+let p=document.getElementById("p").value;
+
+if(u==="admin" && p==="123"){
+localStorage.setItem("role","admin");
+start();
+}
+else if(u==="sv" && p==="123"){
+localStorage.setItem("role","student");
+start();
+}
+else{
+document.getElementById("err").innerText="Sai tài khoản";
+}
+}
+
+function start(){
+document.getElementById("loginPage").style.display="none";
+document.getElementById("app").classList.remove("hidden");
+
+document.getElementById("roleText").innerText =
+"Role: " + localStorage.getItem("role");
+}
+
+function logout(){
+localStorage.clear();
+location.reload();
+}
+
+/* ===== NAV SAFE ===== */
+function show(id){
+let all=["home","skill","class","reg","cancel","list","grade","cert"];
+all.forEach(x=>{
+document.getElementById(x).classList.add("hidden");
+});
+document.getElementById(id).classList.remove("hidden");
+}
+
+/* ===== DATA ===== */
+let skills=JSON.parse(localStorage.getItem("skills")||"[]");
+let classes=JSON.parse(localStorage.getItem("classes")||"[]");
+let regs=JSON.parse(localStorage.getItem("regs")||"[]");
+let grades=JSON.parse(localStorage.getItem("grades")||"{}");
+
+function save(){
+localStorage.setItem("skills",JSON.stringify(skills));
+localStorage.setItem("classes",JSON.stringify(classes));
+localStorage.setItem("regs",JSON.stringify(regs));
+localStorage.setItem("grades",JSON.stringify(grades));
+}
+
+/* ===== SKILL ===== */
+function addSkill(){
+skills.push({ma:sk_ma.value,ten:sk_ten.value});
+save();render();
+}
+
+/* ===== CLASS ===== */
+function addClass(){
+classes.push({ma:cl_ma.value,limit:+cl_limit.value,cur:0});
+save();render();
+}
+
+/* ===== REGISTER ===== */
+function register(){
+let c=classes.find(x=>x.ma==rg_cl.value);
+if(!c){alert("Sai lớp");return;}
+if(c.cur>=c.limit){alert("Full");return;}
+
+regs.push({sv:rg_sv.value,cl:rg_cl.value});
+c.cur++;
+save();render();
+}
+
+/* ===== CANCEL ===== */
+function cancelReg(){
+let i=regs.findIndex(r=>r.sv==ca_sv.value&&r.cl==ca_cl.value);
+if(i==-1){alert("Không thấy");return;}
+
+let c=classes.find(x=>x.ma==ca_cl.value);
+if(c&&c.cur>0)c.cur--;
+
+regs.splice(i,1);
+save();render();
+}
+
+/* ===== GRADE ===== */
+function grade(){
+let total=gr_cc.value*0.3+gr_test.value*0.7;
+grades[gr_sv.value]={cc:gr_cc.value,test:gr_test.value,total,status:total>=5?"ĐẠT":"KHÔNG ĐẠT"};
+save();
+alert("OK");
+}
+
+/* ===== CERT ===== */
+function showCert(){
+let g=grades[ct_sv.value];
+if(!g){cert_out.innerHTML="Không có";return;}
+
+cert_out.innerHTML=
+"Điểm: "+g.total+"<br>Status: "+g.status;
+}
+
+/* ===== RENDER SAFE ===== */
+function render(){
+document.getElementById("sk_list").innerHTML=
+skills.map(s=>"• "+s.ma+"-"+s.ten).join("<br>");
+
+document.getElementById("cl_list").innerHTML=
+classes.map(c=>"• "+c.ma+" ("+c.cur+"/"+c.limit+")").join("<br>");
+
+document.getElementById("list_out").innerHTML=
+regs.map(r=>"👤 "+r.sv+" → "+r.cl).join("<br>");
+}
+
+render();
+
+</script>
+
+</body>
+</html>
